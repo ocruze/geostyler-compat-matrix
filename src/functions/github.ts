@@ -9,7 +9,7 @@ export const REPOS = [
     "geostyler/geostyler-geojson-parser",
     "geostyler/geostyler-symcore-parser",
     "geostyler/geostyler-masterportal-parser",
-    "geostyler/geostyler-geocss-parser",
+    "geostyler/geostyler-data",
     "geostyler/geostyler-legend",
 ] as const;
 

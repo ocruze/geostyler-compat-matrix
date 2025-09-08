@@ -53,7 +53,7 @@ export function useCompat(selectedRepo: Repo, tag: string | undefined, selectedP
             // Preload tags for all repos (6 calls max)
             await Promise.all(
                 REPOS.filter((r) => r !== selectedRepo).map(async (r) => {
-                    const tags = await qc.ensureQueryData<string[]>({ queryKey: ["tags", r], queryFn: () => getTags(r) });
+                    const tags = await qc.ensureQueryData<string[]>({ queryKey: ["tags", r], queryFn: () => getTags(r), staleTime: 1000 * 60 * 60 });
                     targetTagsMap.set(r, tags);
                 })
             );
@@ -87,7 +87,11 @@ export function useCompat(selectedRepo: Repo, tag: string | undefined, selectedP
                 let found: string | null = null;
                 let detail: string | undefined = undefined;
                 for (const t of sorted) {
-                    const targetPkg = await qc.ensureQueryData<PkgJson>({ queryKey: ["pkg", target, t], queryFn: () => getPackageJson(target, t) });
+                    const targetPkg = await qc.ensureQueryData<PkgJson>({
+                        queryKey: ["pkg", target, t],
+                        queryFn: () => getPackageJson(target, t),
+                        staleTime: 1000 * 60 * 60,
+                    });
                     const r = getRangeFrom(targetPkg, selectedName);
                     if (r && selectedPkg?.version) {
                         // Check if selected version satisfies target's range
@@ -117,7 +121,7 @@ export type MatrixRow = { repo: Repo; versions: Record<string, MatrixCell> };
 export function useFullMatrix(majorsPerRepo = 1) {
     const qc = useQueryClient();
     return useQuery<MatrixRow[]>({
-        queryKey: ["full-matrix", majorsPerRepo],
+        queryKey: ["full-matrix", majorsPerRepo, ...REPOS],
         gcTime: 1000 * 60 * 60,
         staleTime: 1000 * 60 * 10,
         queryFn: async () => {
@@ -125,7 +129,7 @@ export function useFullMatrix(majorsPerRepo = 1) {
             const allTags = new Map<Repo, string[]>();
             await Promise.all(
                 REPOS.map(async (r) => {
-                    const tags = await qc.ensureQueryData<string[]>({ queryKey: ["tags", r], queryFn: () => getTags(r) });
+                    const tags = await qc.ensureQueryData<string[]>({ queryKey: ["tags", r], queryFn: () => getTags(r), staleTime: 1000 * 60 * 60 });
                     allTags.set(r, sortDesc(tags));
                 })
             );
@@ -138,8 +142,16 @@ export function useFullMatrix(majorsPerRepo = 1) {
             await Promise.all(
                 REPOS.flatMap((r) =>
                     (columnTags.get(r) || []).map(async (t) => {
-                        const pkg = await qc.ensureQueryData<PkgJson>({ queryKey: ["pkg", r, t], queryFn: () => getPackageJson(r, t) });
-                        const lock = await qc.ensureQueryData<PackageLockJson | null>({ queryKey: ["lock", r, t], queryFn: () => getPackageLockJson(r, t) });
+                        const pkg = await qc.ensureQueryData<PkgJson>({
+                            queryKey: ["pkg", r, t],
+                            queryFn: () => getPackageJson(r, t),
+                            staleTime: 1000 * 60 * 60,
+                        });
+                        const lock = await qc.ensureQueryData<PackageLockJson | null>({
+                            queryKey: ["lock", r, t],
+                            queryFn: () => getPackageLockJson(r, t),
+                            staleTime: 1000 * 60 * 60,
+                        });
                         colMeta.set(`${r}@${t}`, { repo: r, tag: t, pkg, lock });
                     })
                 )
@@ -181,7 +193,11 @@ export function useFullMatrix(majorsPerRepo = 1) {
                         const rTags = allTags.get(rowRepo) ?? [];
                         let found: string | null = null;
                         for (const tv of rTags.slice(0, 30)) {
-                            const targetPkg = await qc.ensureQueryData<PkgJson>({ queryKey: ["pkg", rowRepo, tv], queryFn: () => getPackageJson(rowRepo, tv) });
+                            const targetPkg = await qc.ensureQueryData<PkgJson>({
+                                queryKey: ["pkg", rowRepo, tv],
+                                queryFn: () => getPackageJson(rowRepo, tv),
+                                staleTime: 1000 * 60 * 60,
+                            });
                             const r = getRangeFrom(targetPkg, selectedName);
                             if (r) {
                                 const ok = latestSatisfying([t.replace(/^v/, "")], r); // coerce tag to version when needed
