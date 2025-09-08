@@ -64,8 +64,9 @@ export default function FullMatrix() {
                                             .map((key) => {
                                                 const cell = row.versions[key];
                                                 return (
-                                                    <td key={`${row.repo}-${key}`} style={{ padding: 8 }}>
-                                                        {cell.version ?? "—"}
+                                                    <td key={`${row.repo}-${key}`} style={{ padding: 8, verticalAlign: "top" }}>
+                                                        <div>{cell.version ?? "—"}</div>
+                                                        <div style={{ fontSize: 12, color: "#666" }}>{cell.method}</div>
                                                     </td>
                                                 );
                                             })
@@ -74,6 +75,32 @@ export default function FullMatrix() {
                             ))}
                         </tbody>
                     </table>
+                    <div style={{ marginTop: 8, fontSize: 14 }}>
+                        <details>
+                            <summary style={{ cursor: "pointer", fontWeight: 600 }}>Method legend</summary>
+                            <ul style={{ marginTop: 8 }}>
+                                <li>
+                                    <code>core</code>: Compatibility via intersecting ranges of core packages (<code>geostyler-style</code>,
+                                    <code> geostyler-data</code>).
+                                </li>
+                                <li>
+                                    <code>selected-&gt;target</code>: Selected column's package.json range satisfied by a row version.
+                                </li>
+                                <li>
+                                    <code>target-&gt;selected</code>: Row package.json range satisfied by the selected column version.
+                                </li>
+                                <li>
+                                    <code>lockfile</code>: Version read from selected column's lockfile.
+                                </li>
+                                <li>
+                                    <code>same</code>: Row and column represent the same library and tag.
+                                </li>
+                                <li>
+                                    <code>none</code>: No method yielded a compatible version.
+                                </li>
+                            </ul>
+                        </details>
+                    </div>
                 </div>
             )}
         </section>

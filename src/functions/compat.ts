@@ -60,3 +60,52 @@ export function latestTagPerMajor(tags: string[], limit: number): string[] {
     list.sort((a, b) => semver.rcompare(a.v, b.v));
     return list.slice(0, Math.max(0, limit)).map((x) => x.tag);
 }
+
+// Core-based compatibility helpers
+export const CORE_PKGS = ["geostyler-style", "geostyler-data"] as const;
+export type CorePkg = (typeof CORE_PKGS)[number];
+
+export function getCoreRanges(pkg: PkgJson): Partial<Record<CorePkg, string>> {
+    const out: Partial<Record<CorePkg, string>> = {};
+    for (const core of CORE_PKGS) {
+        const r = getRangeFrom(pkg, core);
+        if (r) out[core] = r;
+    }
+    return out;
+}
+
+export function latestCoreSatisfying(coreTags: string[], rangeA: string, rangeB: string): string | null {
+    // Find the latest core tag that satisfies both ranges
+    const cleaned = coreTags
+        .map((t) => ({ t, v: semver.coerce(t)?.version }))
+        .filter((x): x is { t: string; v: string } => Boolean(x.v))
+        .sort((a, b) => semver.rcompare(a.v, b.v));
+    for (const { t, v } of cleaned) {
+        if (semver.satisfies(v, rangeA, { includePrerelease: true, loose: true }) && semver.satisfies(v, rangeB, { includePrerelease: true, loose: true })) {
+            return t;
+        }
+    }
+    return null;
+}
+
+export function haveIntersectingCoreRanges(
+    selected: PkgJson,
+    target: PkgJson,
+    coreTagsByPkgName: Partial<Record<CorePkg, string[]>>
+): { ok: boolean; matches: Partial<Record<CorePkg, string>> } {
+    const sRanges = getCoreRanges(selected);
+    const tRanges = getCoreRanges(target);
+    const matches: Partial<Record<CorePkg, string>> = {};
+    for (const core of CORE_PKGS) {
+        const s = sRanges[core];
+        const t = tRanges[core];
+        if (s && t) {
+            const tags = coreTagsByPkgName[core] ?? [];
+            const hit = latestCoreSatisfying(tags, s, t);
+            if (!hit) return { ok: false, matches };
+            matches[core] = hit;
+        }
+        // If one side doesn't declare the core, we don't block compatibility on it
+    }
+    return { ok: true, matches };
+}

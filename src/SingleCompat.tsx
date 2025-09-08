@@ -96,6 +96,11 @@ export default function SingleCompat() {
                     <summary style={{ cursor: "pointer", fontWeight: 600 }}>What do the methods mean?</summary>
                     <ul style={{ marginTop: 8 }}>
                         <li>
+                            <code>core</code>: Compatibility is determined by intersecting both libraries' declared semver ranges for the core packages{" "}
+                            <code>geostyler-style</code> and <code>geostyler-data</code>. The newest target version whose package.json works with the same core
+                            version(s) is selected.
+                        </li>
+                        <li>
                             <code>selected-&gt;target</code>: Use the selected library's package.json to read its semver range for the target; pick the newest
                             target version that satisfies that range.
                         </li>
