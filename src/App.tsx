@@ -1,8 +1,8 @@
-import { QueryClient } from "@tanstack/query-core";
-import Matrix from "./Matrix";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import Matrix from "./Matrix";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -20,7 +20,7 @@ function App() {
     return (
         <div style={{ padding: 16 }}>
             <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: asyncStoragePersister }}>
-                <h2>GeoStyler Compatibility Matrix</h2>
+                <h1>GeoStyler Compatibility Matrix</h1>
                 <Matrix />
                 <ReactQueryDevtools initialIsOpen={false} />
             </PersistQueryClientProvider>

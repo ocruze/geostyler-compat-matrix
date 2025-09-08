@@ -13,6 +13,7 @@ export default function TokenManager() {
         qc.invalidateQueries({ queryKey: ["pkg"] });
         qc.invalidateQueries({ queryKey: ["lock"] });
         qc.invalidateQueries({ queryKey: ["compat"] });
+        qc.invalidateQueries({ queryKey: ["full-matrix"] });
         setStatus("Saved");
         setTimeout(() => setStatus(null), 1500);
     };
@@ -23,6 +24,7 @@ export default function TokenManager() {
         qc.invalidateQueries({ queryKey: ["pkg"] });
         qc.invalidateQueries({ queryKey: ["lock"] });
         qc.invalidateQueries({ queryKey: ["compat"] });
+        qc.invalidateQueries({ queryKey: ["full-matrix"] });
         setStatus("Cleared");
         setTimeout(() => setStatus(null), 1500);
     };

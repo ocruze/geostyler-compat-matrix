@@ -1,22 +1,19 @@
-// Minimal GitHub API client with ETag caching via localStorage
-// No token used by default to keep it simple; user can set GITHUB_TOKEN in localStorage for higher rate limits.
-
-export type Repo =
-    | "geostyler/geostyler-style"
-    | "geostyler/geostyler"
-    | "geostyler/geostyler-sld-parser"
-    | "geostyler/geostyler-mapbox-parser"
-    | "geostyler/geostyler-qgis-parser"
-    | "geostyler/geostyler-openlayers-parser";
-
-export const REPOS: Repo[] = [
+export const REPOS = [
     "geostyler/geostyler-style",
     "geostyler/geostyler",
     "geostyler/geostyler-sld-parser",
     "geostyler/geostyler-mapbox-parser",
     "geostyler/geostyler-qgis-parser",
     "geostyler/geostyler-openlayers-parser",
-];
+    "geostyler/geostyler-lyrx-parser",
+    "geostyler/geostyler-geojson-parser",
+    "geostyler/geostyler-symcore-parser",
+    "geostyler/geostyler-masterportal-parser",
+    "geostyler/geostyler-geocss-parser",
+    "geostyler/geostyler-legend",
+] as const;
+
+export type Repo = (typeof REPOS)[number];
 
 type Cached<T = unknown> = { etag: string; body: T; timestamp: number };
 
@@ -95,4 +92,8 @@ export async function getPackageLockJson(repo: Repo, ref: string): Promise<Packa
 
 export function shortRepo(repo: Repo): string {
     return repo.split("/")[1];
+}
+
+export function repoLink(repo: Repo): string {
+    return `https://github.com/${repo}`;
 }

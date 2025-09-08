@@ -1,0 +1,117 @@
+import { useEffect, useMemo, useState } from "react";
+import { sortDesc } from "./functions/compat";
+import { REPOS, type Repo, repoLink, shortRepo } from "./functions/github";
+import { useCompat, usePackageJson, usePackageLock, useTags } from "./functions/hooks";
+
+function Selector({ value, onChange }: { value: Repo; onChange: (r: Repo) => void }) {
+    return (
+        <select value={value} onChange={(e) => onChange(e.target.value as Repo)}>
+            {REPOS.map((r) => (
+                <option key={r} value={r}>
+                    {r}
+                </option>
+            ))}
+        </select>
+    );
+}
+
+function TagPicker({ repo, value, onChange }: { repo: Repo; value?: string; onChange: (tag: string) => void }) {
+    const { data: tags, isLoading, error } = useTags(repo);
+    const sorted = useMemo(() => (tags ? sortDesc(tags) : []), [tags]);
+    if (isLoading) return <span>Loading tags…</span>;
+    if (error) return <span>Error loading tags</span>;
+    return (
+        <select value={value} onChange={(e) => onChange(e.target.value)}>
+            <option value="">Select version…</option>
+            {sorted.map((t) => (
+                <option key={t} value={t}>
+                    {t}
+                </option>
+            ))}
+        </select>
+    );
+}
+
+export default function SingleCompat() {
+    const [repo, setRepo] = useState<Repo>(REPOS[0]);
+    const [tag, setTag] = useState<string | undefined>(undefined);
+    const { data: pkg } = usePackageJson(repo, tag);
+    const { data: lock } = usePackageLock(repo, tag);
+    const { data: results, isFetching } = useCompat(repo, tag, pkg, lock);
+
+    const { data: tags } = useTags(repo);
+    useEffect(() => {
+        if (tags) {
+            const sorted = sortDesc(tags);
+            if (sorted.length > 0) {
+                setTag(sorted[0]);
+            }
+        }
+    }, [tags]);
+
+    return (
+        <section>
+            <h2>Single Library Compatibility</h2>
+            <p>Select a library and version</p>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label>Library:</label>
+                <Selector value={repo} onChange={(r) => setRepo(r)} />
+                <label>Version:</label>
+                <TagPicker repo={repo} value={tag} onChange={setTag} />
+            </div>
+            {isFetching && <div>Loading</div>}
+
+            {tag && results && (
+                <div>
+                    <h3>
+                        Compatibility for {repo}@{tag}
+                    </h3>
+                    <table style={{ borderCollapse: "collapse" }}>
+                        <thead>
+                            <tr>
+                                <th style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: 8 }}>Target</th>
+                                <th style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: 8 }}>Latest compatible</th>
+                                <th style={{ textAlign: "left", borderBottom: "1px solid #ccc", padding: 8 }}>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {results.map((r) => (
+                                <tr key={r.targetRepo}>
+                                    <td style={{ padding: 8 }}>
+                                        <a href={repoLink(r.targetRepo)} target="_blank" rel="noreferrer">
+                                            {shortRepo(r.targetRepo)}
+                                        </a>
+                                    </td>
+                                    <td style={{ padding: 8 }}>{r.version ?? "Unknown"}</td>
+                                    <td style={{ padding: 8 }}>{r.method}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <section style={{ marginTop: 12 }}>
+                <details>
+                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>What do the methods mean?</summary>
+                    <ul style={{ marginTop: 8 }}>
+                        <li>
+                            <code>selected-&gt;target</code>: Use the selected library's package.json to read its semver range for the target; pick the newest
+                            target version that satisfies that range.
+                        </li>
+                        <li>
+                            <code>target-&gt;selected</code>: Check the target library's package.json (across recent tags) to find the newest target version
+                            whose declared range is satisfied by the selected library's version.
+                        </li>
+                        <li>
+                            <code>lockfile</code>: Read the selected library's package-lock.json for that tag and use the resolved target version from it.
+                        </li>
+                        <li>
+                            <code>none</code>: No compatible version could be determined from the above methods.
+                        </li>
+                    </ul>
+                </details>
+            </section>
+        </section>
+    );
+}

@@ -46,3 +46,17 @@ export type CompatResult = {
     method: "selected->target" | "target->selected" | "lockfile" | "none";
     details?: string;
 };
+
+export function latestTagPerMajor(tags: string[], limit: number): string[] {
+    // Choose the newest tag within each major, then take the top N majors (newest first)
+    const perMajor = new Map<number, { v: semver.SemVer; tag: string }>();
+    for (const t of tags) {
+        const c = semver.coerce(t);
+        if (!c) continue;
+        const prev = perMajor.get(c.major);
+        if (!prev || semver.gt(c, prev.v)) perMajor.set(c.major, { v: c, tag: t });
+    }
+    const list = Array.from(perMajor.values());
+    list.sort((a, b) => semver.rcompare(a.v, b.v));
+    return list.slice(0, Math.max(0, limit)).map((x) => x.tag);
+}
