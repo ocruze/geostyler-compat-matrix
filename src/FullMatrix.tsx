@@ -1,3 +1,4 @@
+import { Collapse, Select, Typography } from "antd";
 import { useState } from "react";
 import { REPOS, repoLink, shortRepo } from "./functions/github";
 import { useFullMatrix } from "./functions/hooks";
@@ -8,16 +9,17 @@ export default function FullMatrix() {
 
     return (
         <section>
-            <h2>Compatibility matrix</h2>
+            <Typography.Title level={2}>Compatibility matrix</Typography.Title>
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
                 <label>Majors per library:</label>
-                <select value={majorsPerRepo} onChange={(e) => setMajorsPerRepo(Number(e.target.value))}>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                        <option key={n} value={n}>
-                            {n}
-                        </option>
-                    ))}
-                </select>
+                <Select
+                    value={majorsPerRepo}
+                    onChange={(v) => setMajorsPerRepo(v)}
+                    options={[1, 2, 3, 4, 5].map((n) => ({
+                        value: n,
+                        label: n,
+                    }))}
+                />
             </div>
             {isFetching && <div>Loading</div>}
 
@@ -75,32 +77,38 @@ export default function FullMatrix() {
                             ))}
                         </tbody>
                     </table>
-                    <div style={{ marginTop: 8, fontSize: 14 }}>
-                        <details>
-                            <summary style={{ cursor: "pointer", fontWeight: 600 }}>Method legend</summary>
-                            <ul style={{ marginTop: 8 }}>
-                                <li>
-                                    <code>core</code>: Compatibility via intersecting ranges of core packages (<code>geostyler-style</code>,
-                                    <code> geostyler-data</code>).
-                                </li>
-                                <li>
-                                    <code>selected-&gt;target</code>: Selected column's package.json range satisfied by a row version.
-                                </li>
-                                <li>
-                                    <code>target-&gt;selected</code>: Row package.json range satisfied by the selected column version.
-                                </li>
-                                <li>
-                                    <code>lockfile</code>: Version read from selected column's lockfile.
-                                </li>
-                                <li>
-                                    <code>same</code>: Row and column represent the same library and tag.
-                                </li>
-                                <li>
-                                    <code>none</code>: No method yielded a compatible version.
-                                </li>
-                            </ul>
-                        </details>
-                    </div>
+
+                    <Collapse
+                        items={[
+                            {
+                                key: "methods",
+                                label: "What do the methods mean?",
+                                children: (
+                                    <ul style={{ marginTop: 8 }}>
+                                        <li>
+                                            <code>core</code>: Compatibility via intersecting ranges of core packages (<code>geostyler-style</code>,
+                                            <code> geostyler-data</code>).
+                                        </li>
+                                        <li>
+                                            <code>selected-&gt;target</code>: Selected column's package.json range satisfied by a row version.
+                                        </li>
+                                        <li>
+                                            <code>target-&gt;selected</code>: Row package.json range satisfied by the selected column version.
+                                        </li>
+                                        <li>
+                                            <code>lockfile</code>: Version read from selected column's lockfile.
+                                        </li>
+                                        <li>
+                                            <code>same</code>: Row and column represent the same library and tag.
+                                        </li>
+                                        <li>
+                                            <code>none</code>: No method yielded a compatible version.
+                                        </li>
+                                    </ul>
+                                ),
+                            },
+                        ]}
+                    />
                 </div>
             )}
         </section>

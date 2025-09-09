@@ -2,16 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { sortDesc } from "./functions/compat";
 import { REPOS, type Repo, repoLink, shortRepo } from "./functions/github";
 import { useCompat, usePackageJson, usePackageLock, useTags } from "./functions/hooks";
+import { Collapse, Select, Typography } from "antd";
 
 function Selector({ value, onChange }: { value: Repo; onChange: (r: Repo) => void }) {
     return (
-        <select value={value} onChange={(e) => onChange(e.target.value as Repo)}>
-            {REPOS.map((r) => (
-                <option key={r} value={r}>
-                    {r}
-                </option>
-            ))}
-        </select>
+        <Select
+            value={value}
+            onChange={onChange}
+            options={REPOS.map((r) => ({
+                value: r,
+                label: shortRepo(r),
+            }))}
+            style={{ minWidth: 240 }}
+        />
     );
 }
 
@@ -20,15 +23,16 @@ function TagPicker({ repo, value, onChange }: { repo: Repo; value?: string; onCh
     const sorted = useMemo(() => (tags ? sortDesc(tags) : []), [tags]);
     if (isLoading) return <span>Loading tags…</span>;
     if (error) return <span>Error loading tags</span>;
+
     return (
-        <select value={value} onChange={(e) => onChange(e.target.value)}>
-            <option value="">Select version…</option>
-            {sorted.map((t) => (
-                <option key={t} value={t}>
-                    {t}
-                </option>
-            ))}
-        </select>
+        <Select
+            value={value}
+            onChange={onChange}
+            options={sorted.map((t) => ({
+                label: t,
+                value: t,
+            }))}
+        />
     );
 }
 
@@ -51,7 +55,7 @@ export default function SingleCompat() {
 
     return (
         <section>
-            <h2>Single Library Compatibility</h2>
+            <Typography.Title level={2}>Single Library Compatibility</Typography.Title>
             <p>Select a library and version</p>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <label>Library:</label>
@@ -63,9 +67,9 @@ export default function SingleCompat() {
 
             {tag && results && (
                 <div>
-                    <h3>
+                    <Typography.Title level={3}>
                         Compatibility for {repo}@{tag}
-                    </h3>
+                    </Typography.Title>
                     <table style={{ borderCollapse: "collapse" }}>
                         <thead>
                             <tr>
@@ -91,32 +95,38 @@ export default function SingleCompat() {
                 </div>
             )}
 
-            <section style={{ marginTop: 12 }}>
-                <details>
-                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>What do the methods mean?</summary>
-                    <ul style={{ marginTop: 8 }}>
-                        <li>
-                            <code>core</code>: Compatibility is determined by intersecting both libraries' declared semver ranges for the core packages{" "}
-                            <code>geostyler-style</code> and <code>geostyler-data</code>. The newest target version whose package.json works with the same core
-                            version(s) is selected.
-                        </li>
-                        <li>
-                            <code>selected-&gt;target</code>: Use the selected library's package.json to read its semver range for the target; pick the newest
-                            target version that satisfies that range.
-                        </li>
-                        <li>
-                            <code>target-&gt;selected</code>: Check the target library's package.json (across recent tags) to find the newest target version
-                            whose declared range is satisfied by the selected library's version.
-                        </li>
-                        <li>
-                            <code>lockfile</code>: Read the selected library's package-lock.json for that tag and use the resolved target version from it.
-                        </li>
-                        <li>
-                            <code>none</code>: No compatible version could be determined from the above methods.
-                        </li>
-                    </ul>
-                </details>
-            </section>
+            <Collapse
+                items={[
+                    {
+                        key: "methods",
+                        label: "What do the methods mean?",
+                        children: (
+                            <ul style={{ marginTop: 8 }}>
+                                <li>
+                                    <code>core</code>: Compatibility is determined by intersecting both libraries' declared semver ranges for the core packages{" "}
+                                    <code>geostyler-style</code> and <code>geostyler-data</code>. The newest target version whose package.json works with the
+                                    same core version(s) is selected.
+                                </li>
+                                <li>
+                                    <code>selected-&gt;target</code>: Use the selected library's package.json to read its semver range for the target; pick the
+                                    newest target version that satisfies that range.
+                                </li>
+                                <li>
+                                    <code>target-&gt;selected</code>: Check the target library's package.json (across recent tags) to find the newest target
+                                    version whose declared range is satisfied by the selected library's version.
+                                </li>
+                                <li>
+                                    <code>lockfile</code>: Read the selected library's package-lock.json for that tag and use the resolved target version from
+                                    it.
+                                </li>
+                                <li>
+                                    <code>none</code>: No compatible version could be determined from the above methods.
+                                </li>
+                            </ul>
+                        ),
+                    },
+                ]}
+            />
         </section>
     );
 }

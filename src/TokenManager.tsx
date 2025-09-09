@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { Button, Input, Space } from "antd";
 import { useState } from "react";
 
 export default function TokenManager() {
@@ -33,29 +34,33 @@ export default function TokenManager() {
 
     return (
         <div style={{ marginTop: 16, padding: 12, border: "1px solid #3333", borderRadius: 6 }}>
-            <button onClick={() => setOpen((v) => !v)} style={{ padding: "4px 8px" }}>
+            <Button onClick={() => setOpen((v) => !v)} style={{ padding: "4px 8px" }}>
                 {open ? "Hide GitHub token" : "Set GitHub token"}
-            </button>
+            </Button>
             {open ? (
-                <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <input
-                        type="password"
-                        placeholder="ghp_…"
-                        value={token}
-                        onChange={(e) => setToken(e.target.value)}
-                        style={{ minWidth: 280, padding: 6 }}
-                        autoComplete="off"
-                    />
-                    <button onClick={save} style={{ padding: "6px 10px" }}>
-                        Save
-                    </button>
-                    <button onClick={clear} style={{ padding: "6px 10px" }}>
-                        Clear
-                    </button>
+                <>
+                    <Space.Compact style={{ width: "100%" }}>
+                        <Input
+                            type="password"
+                            placeholder="ghp_…"
+                            value={token}
+                            onChange={(e) => setToken(e.target.value)}
+                            style={{ minWidth: 280, padding: 6 }}
+                            autoComplete="off"
+                        />
+                        <Button onClick={save} style={{ padding: "6px 10px" }}>
+                            Save
+                        </Button>
+                        <Button onClick={clear} style={{ padding: "6px 10px" }}>
+                            Clear
+                        </Button>
+                    </Space.Compact>
 
-                    <span style={{ fontSize: 12, color: "#666" }}>Current: {token ? masked : "(not set)"}</span>
-                    {status ? <span style={{ fontSize: 12 }}>{status}</span> : null}
-                </div>
+                    <Space.Compact style={{ width: "100%" }}>
+                        <span style={{ fontSize: 12, color: "#666" }}>Current: {token ? masked : "(not set)"}</span>
+                        {status ? <span style={{ fontSize: 12 }}>{status}</span> : null}
+                    </Space.Compact>
+                </>
             ) : (
                 <div style={{ marginTop: 8, fontSize: 12, color: "#666" }}>
                     {token ? "A token is set (hidden)." : "No token set."} Using a token increases GitHub API limits.
